@@ -18,7 +18,7 @@ class PrefixSum {
         let b: MTLBuffer
         let res: MTLBuffer
 
-        static let bufsz: Int = 8
+        static let bufsz: Int = 9
 
         init?(device: MTLDevice?) {
             guard let device else {
@@ -56,9 +56,7 @@ class PrefixSum {
             assert(buffer.allocatedSize == Self.bufsz)
 
             buffer.contents().withMemoryRebound(to: UInt8.self, capacity: buffer.allocatedSize) { pointer in
-                for i in 0..<Self.bufsz {
-                    pointer[i] = val
-                }
+                pointer.update(repeating: val, count: buffer.allocatedSize)
             }
 
         }
@@ -73,8 +71,9 @@ class PrefixSum {
             encoder.setBuffer(res, offset: 0, index: 2)
 
             let gridsz = MTLSize(width: Self.bufsz, height: 1, depth: 1)
-            let tgsize = MTLSize(width: min(state.maxTotalThreadsPerThreadgroup, Self.bufsz), height: 1, depth: 1)
-            encoder.dispatchThreads(gridsz, threadsPerThreadgroup: tgsize)
+            let tgsz = MTLSize(width: state.maxTotalThreadsPerThreadgroup, height: 1, depth: 1)
+            print(gridsz, tgsz)
+            encoder.dispatchThreads(gridsz, threadsPerThreadgroup: tgsz)
 
             encoder.endEncoding()
 
